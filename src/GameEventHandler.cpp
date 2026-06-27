@@ -140,7 +140,7 @@ namespace plugin {
                 float time_per_anim = ((controller->hiKeyTime - controller->loKeyTime));
                 if (controller->frequency != 0.0) {
                     controller->phase =
-                        fmodf(controller->phase + (time_per_anim/2.0f) + (time_per_anim - controller->ComputeScaledTime(*real_world_time_ptr)), time_per_anim);
+                        fmodf(controller->phase + (time_per_anim-0.0001f) + (time_per_anim - controller->ComputeScaledTime(*real_world_time_ptr)), time_per_anim);
                 }
                 if (auto interpolator = controller->GetInterpolator()) {
                     NiQuatTransform t;
