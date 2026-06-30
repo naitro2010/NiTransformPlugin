@@ -198,7 +198,7 @@ namespace plugin {
 
                 if (controller->frequency != 0.0) {
                     controller->phase =
-                        fmodf(controller->phase + time_per_anim - controller->ComputeScaledTime(*real_world_time_ptr), time_per_anim);
+                        fmodf(controller->phase + (time_per_anim+0.00001f) - controller->ComputeScaledTime(*real_world_time_ptr), time_per_anim);
                 }
                 controller->flags.set(RE::NiTimeController::Flag::kActive);
                 float tm = *real_world_time_ptr;
@@ -220,7 +220,7 @@ namespace plugin {
                 float* real_world_time_ptr = (float*) REL::RelocationID(517597, 400912, 517597).address();
                 float time_per_anim = ((controller->hiKeyTime - controller->loKeyTime));
                 if (controller->frequency != 0.0) {
-                    controller->phase = fmodf(controller->phase + (time_per_anim - 0.0001f) +
+                    controller->phase = fmodf(controller->phase + (time_per_anim - 0.00001f) +
                                                   (time_per_anim - controller->ComputeScaledTime(*real_world_time_ptr)),
                                               time_per_anim);
                 }
