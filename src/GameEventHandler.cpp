@@ -16,7 +16,6 @@ namespace plugin {
         while (true) {
             auto task = std::function<void()>(nullptr);
             {
-                
                 if (queue_copy.empty()) {
                     return;
                 }
@@ -33,11 +32,62 @@ namespace plugin {
     }
 
     class NiQuatTransform {
-        public:
-            RE::NiPoint3 translation;
-            RE::NiQuaternion rotation;
-            float scale;
+    public:
+        RE::NiPoint3 translation;
+        RE::NiQuaternion rotation;
+        float scale;
     };
+    RE::NiTimeController* WalkControllers(RE::NiNode* n, RE::BSFixedString& nodeName) {
+        if (!n) {
+            return nullptr;
+        }
+        if (auto obj = n->GetObjectByName(nodeName)) {
+            if (auto found_node = obj) {
+                if (auto controller=found_node->GetController<RE::NiTimeController>()) {
+                    return controller;
+                }
+            }
+        }
+        if (std::string(n->name.c_str()).ends_with(nodeName)) {
+        
+            if (auto found_node = n) {
+                if (auto controller = found_node->GetController<RE::NiTimeController>()) {
+                    return controller;
+                }
+            }
+
+        }
+        for (auto& c: n->GetChildren()) {
+            if (!c.get()) {
+                continue;
+            }
+            if (auto geo = c.get()->AsGeometry()) {
+            
+                if (std::string(geo->name.c_str()).ends_with(nodeName)) {
+                    if (geo->GetGeometryRuntimeData().properties[RE::BSGeometry::States::kProperty]) {
+                        if (auto controller=geo->GetGeometryRuntimeData()
+                                .properties[RE::BSGeometry::States::kProperty]
+                                ->GetController<RE::NiTimeController>()) {
+                        
+                            return controller;
+                        
+                        }
+                    }
+                }        
+            
+            
+            
+            }
+            if (auto controller = WalkControllers(c.get()->AsNode(), nodeName)) {
+                return controller;
+            }
+        }
+
+        return nullptr;
+
+        
+    }
+
     RE::NiNode* WalkNode(RE::NiNode* n, RE::BSFixedString& nodeName) {
         if (!n) {
             return nullptr;
@@ -50,11 +100,12 @@ namespace plugin {
         if (std::string(n->name.c_str()).ends_with(nodeName)) {
             return n;
         }
-        for (auto& c: n->GetChildren()) {
+        for (auto& c : n->GetChildren()) {
             if (!c.get()) {
                 continue;
             }
             if (auto geo = c.get()->AsGeometry()) {
+
                 if (auto skin = geo->GetGeometryRuntimeData().skinInstance) {
                     if (skin->skinData) {
                         for (unsigned int bone_idx = 0; bone_idx < skin->skinData->bones; bone_idx++) {
@@ -77,7 +128,7 @@ namespace plugin {
         return nullptr;
     }
     bool NiTransformOperation(RE::Actor* actor, RE::TESObjectARMO* armor, RE::BSFixedString nodeName,
-                              std::function<bool(RE::NiInterpController*)> callback) {
+                              std::function<bool(RE::NiTimeController*)> callback) {
         bool retval = false;
         if (!actor) {
             return retval;
@@ -98,9 +149,13 @@ namespace plugin {
                     continue;
                 }
                 if (auto node = obj->AsNode()) {
-                    if (auto controller = node->GetController((RE::NiRTTI*) RE::NiRTTI_NiInterpController.address())) {
-                        retval = callback((RE::NiInterpController*) controller);
+
+                    if (auto controller = node->GetController((RE::NiRTTI*) RE::NiRTTI_NiTimeController.address())) {
+                        retval = callback((RE::NiTimeController*) controller);
                     }
+                }
+                if (auto controller = WalkControllers(biped->objects[idx].partClone->AsNode(), nodeName)) {
+                    retval = callback((RE::NiTimeController*) controller);
                 }
             }
             for (uint32_t idx = 0; idx < RE::BIPED_OBJECTS::kTotal; idx++) {
@@ -115,9 +170,12 @@ namespace plugin {
                     continue;
                 }
                 if (auto node = obj->AsNode()) {
-                    if (auto controller = node->GetController((RE::NiRTTI*) RE::NiRTTI_NiInterpController.address())) {
-                        retval = callback((RE::NiInterpController*) controller);
+                    if (auto controller = node->GetController((RE::NiRTTI*) RE::NiRTTI_NiTimeController.address())) {
+                        retval = callback((RE::NiTimeController*) controller);
                     }
+                }
+                if (auto controller=WalkControllers(biped->bufferedObjects[idx].partClone->AsNode(), nodeName)) {
+                    retval = callback((RE::NiTimeController*) controller);
                 }
             }
         }
@@ -125,15 +183,15 @@ namespace plugin {
     }
     bool SetNiTransformFrequency(RE::StaticFunctionTag*, RE::Actor* actor, RE::TESObjectARMO* armor, RE::BSFixedString nodeName,
                                  float frequency) {
-        return NiTransformOperation(actor, armor, nodeName, [frequency](RE::NiInterpController* controller) {
+        return NiTransformOperation(actor, armor, nodeName, [frequency](RE::NiTimeController* controller) {
             controller->frequency = frequency;
             return true;
         });
     }
 
     bool SetNiTransformStart(RE::StaticFunctionTag*, RE::Actor* actor, RE::TESObjectARMO* armor, RE::BSFixedString nodeName) {
-        return NiTransformOperation(actor, armor, nodeName, [](RE::NiInterpController* controller) {
-            auto update_fn = (void (*)(RE::NiInterpController* c, float* t))((*(uint64_t**) controller)[0x27]);
+        return NiTransformOperation(actor, armor, nodeName, [](RE::NiTimeController* controller) {
+            auto update_fn = (void (*)(RE::NiTimeController* c, float* t))((*(uint64_t**) controller)[0x27]);
             {
                 float* real_world_time_ptr = (float*) REL::RelocationID(517597, 400912, 517597).address();
                 float time_per_anim = ((controller->hiKeyTime - controller->loKeyTime));
@@ -142,7 +200,7 @@ namespace plugin {
                     controller->phase =
                         fmodf(controller->phase + time_per_anim - controller->ComputeScaledTime(*real_world_time_ptr), time_per_anim);
                 }
-                controller->flags.set(RE::NiInterpController::Flag::kActive);
+                controller->flags.set(RE::NiTimeController::Flag::kActive);
                 float tm = *real_world_time_ptr;
                 if (controller->flags.any(RE::NiTimeController::Flag::kForceUpdate)) {
                     update_fn(controller, &tm);
@@ -156,8 +214,8 @@ namespace plugin {
         });
     }
     bool NiTransformStop(RE::Actor* actor, RE::TESObjectARMO* armor, RE::BSFixedString nodeName) {
-        return NiTransformOperation(actor, armor, nodeName, [](RE::NiInterpController* controller) {
-            auto update_fn = (void (*)(RE::NiInterpController* c, float* t))((*(uint64_t**) controller)[0x27]);
+        return NiTransformOperation(actor, armor, nodeName, [](RE::NiTimeController* controller) {
+            auto update_fn = (void (*)(RE::NiTimeController* c, float* t))((*(uint64_t**) controller)[0x27]);
             {
                 float* real_world_time_ptr = (float*) REL::RelocationID(517597, 400912, 517597).address();
                 float time_per_anim = ((controller->hiKeyTime - controller->loKeyTime));
@@ -176,7 +234,7 @@ namespace plugin {
                     controller->flags.reset(RE::NiTimeController::Flag::kForceUpdate);
                 }
 
-                controller->flags.reset(RE::NiInterpController::Flag::kActive);
+                controller->flags.reset(RE::NiTimeController::Flag::kActive);
 
                 return true;
             }
@@ -186,8 +244,8 @@ namespace plugin {
         return NiTransformStop(actor, armor, nodeName);
     }
     bool SetNiTransformPause(RE::StaticFunctionTag*, RE::Actor* actor, RE::TESObjectARMO* armor, RE::BSFixedString nodeName, bool paused) {
-        return NiTransformOperation(actor, armor, nodeName, [paused](RE::NiInterpController* controller) {
-            //auto update_fn = (void (*)(RE::NiInterpController* c, float* t))((*(uint64_t**) controller)[0x27]);
+        return NiTransformOperation(actor, armor, nodeName, [paused](RE::NiTimeController* controller) {
+            //auto update_fn = (void (*)(RE::NiTimeController* c, float* t))((*(uint64_t**) controller)[0x27]);
 
             float* real_world_time_ptr = (float*) REL::RelocationID(517597, 400912, 517597).address();
             float time_per_anim = ((controller->hiKeyTime - controller->loKeyTime));
@@ -197,9 +255,9 @@ namespace plugin {
             //}
 
             if (paused) {
-                controller->flags.reset(RE::NiInterpController::Flag::kActive);
+                controller->flags.reset(RE::NiTimeController::Flag::kActive);
             } else {
-                if (!controller->flags.any(RE::NiInterpController::Flag::kActive)) {
+                if (!controller->flags.any(RE::NiTimeController::Flag::kActive)) {
                     //float time_diff = (*real_world_time_ptr - controller->lastTime);
                     if (controller->frequency != 0.0) {
                         auto original_scaled_phase = fmodf((controller->phase + (lastscaledtime)), time_per_anim);
@@ -209,7 +267,7 @@ namespace plugin {
                         //controller->phase = fmodf(time_diff, 1.0f / controller->frequency);
                     }
                 }
-                controller->flags.set(RE::NiInterpController::Flag::kActive);
+                controller->flags.set(RE::NiTimeController::Flag::kActive);
             }
             return true;
         });
@@ -220,20 +278,20 @@ namespace plugin {
         }
         if (auto actor_ptr = handle.get()) {
             if (auto armor = RE::TESForm::LookupByID<RE::TESObjectARMO>(armor_form)) {
-                return NiTransformOperation(actor_ptr.get(), armor, nodeName, [actor_ptr,armor,handle, armor_form, nodeName](RE::NiInterpController* controller) {
-                    float* real_world_time_ptr = (float*) REL::RelocationID(517597, 400912, 517597).address();
-                    if (!controller->flags.any(RE::NiTimeController::Flag::kActive)) {
+                return NiTransformOperation(
+                    actor_ptr.get(), armor, nodeName, [actor_ptr, armor, handle, armor_form, nodeName](RE::NiTimeController* controller) {
+                        float* real_world_time_ptr = (float*) REL::RelocationID(517597, 400912, 517597).address();
+                        if (!controller->flags.any(RE::NiTimeController::Flag::kActive)) {
+                            return true;
+                        }
+                        auto last_scaled_time = controller->scaledTime;
+                        if (last_scaled_time > (controller->ComputeScaledTime(*real_world_time_ptr) + 0.00001f)) {
+                            return NiTransformStop(actor_ptr.get(), armor, nodeName);
+                        }
+                        AddNiTransformTask(
+                            std::function([handle, armor_form, nodeName]() { CheckNiTransformStopDelayed(handle, armor_form, nodeName); }));
                         return true;
-                    }
-                    auto last_scaled_time = controller->scaledTime;
-                    if (last_scaled_time > (controller->ComputeScaledTime(*real_world_time_ptr)+0.00001f)) {
-                        return NiTransformStop(actor_ptr.get(), armor, nodeName);
-                    }
-                    AddNiTransformTask(std::function([handle, armor_form, nodeName]() {
-                        CheckNiTransformStopDelayed(handle, armor_form, nodeName);
-                    }));
-                    return true;
-                });
+                    });
             }
         }
         return false;
@@ -243,7 +301,6 @@ namespace plugin {
             auto handle = actor->GetHandle();
             auto armor_form = armor->GetFormID();
             return CheckNiTransformStopDelayed(handle, armor_form, nodeName);
-            
         }
         return false;
     }
@@ -276,7 +333,8 @@ namespace plugin {
                                                              false);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStart", "NiTransformPlugin", SetNiTransformStart, false);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStop", "NiTransformPlugin", SetNiTransformStop, false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStopDelayed", "NiTransformPlugin", SetNiTransformStopDelayed, false);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStopDelayed", "NiTransformPlugin", SetNiTransformStopDelayed,
+                                                             false);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformPause", "NiTransformPlugin", SetNiTransformPause, false);
         logger::info("onDataLoaded()");
     }
@@ -301,4 +359,3 @@ namespace plugin {
         logger::info("onDeleteGame()");
     }
 }  // namespace plugin
-
