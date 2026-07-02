@@ -144,19 +144,21 @@ namespace plugin {
                 if (!biped->objects[idx].partClone) {
                     continue;
                 }
+                if (auto controller = WalkControllers(biped->objects[idx].partClone->AsNode(), nodeName)) {
+                    retval |= callback((RE::NiTimeController*) controller);
+                }
                 auto obj = WalkNode(biped->objects[idx].partClone->AsNode(), nodeName);
+
                 if (!obj) {
                     continue;
                 }
                 if (auto node = obj->AsNode()) {
 
                     if (auto controller = node->GetController((RE::NiRTTI*) RE::NiRTTI_NiTimeController.address())) {
-                        retval = callback((RE::NiTimeController*) controller);
+                        retval |= callback((RE::NiTimeController*) controller);
                     }
                 }
-                if (auto controller = WalkControllers(biped->objects[idx].partClone->AsNode(), nodeName)) {
-                    retval = callback((RE::NiTimeController*) controller);
-                }
+
             }
             for (uint32_t idx = 0; idx < RE::BIPED_OBJECTS::kTotal; idx++) {
                 if (biped->bufferedObjects[idx].item != armor) {
@@ -165,18 +167,19 @@ namespace plugin {
                 if (!biped->bufferedObjects[idx].partClone) {
                     continue;
                 }
+                if (auto controller = WalkControllers(biped->bufferedObjects[idx].partClone->AsNode(), nodeName)) {
+                    retval |= callback((RE::NiTimeController*) controller);
+                }
                 auto obj = WalkNode(biped->bufferedObjects[idx].partClone->AsNode(), nodeName);
                 if (!obj) {
                     continue;
                 }
                 if (auto node = obj->AsNode()) {
                     if (auto controller = node->GetController((RE::NiRTTI*) RE::NiRTTI_NiTimeController.address())) {
-                        retval = callback((RE::NiTimeController*) controller);
+                        retval |= callback((RE::NiTimeController*) controller);
                     }
                 }
-                if (auto controller=WalkControllers(biped->bufferedObjects[idx].partClone->AsNode(), nodeName)) {
-                    retval = callback((RE::NiTimeController*) controller);
-                }
+
             }
         }
         return retval;
