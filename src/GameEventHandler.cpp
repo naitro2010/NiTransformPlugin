@@ -106,7 +106,7 @@ namespace plugin {
             }
             if (auto geo = c.get()->AsGeometry()) {
 
-                if (auto skin = geo->GetGeometryRuntimeData().skinInstance) {
+                /* if (auto skin = geo->GetGeometryRuntimeData().skinInstance) {
                     if (skin->skinData) {
                         for (unsigned int bone_idx = 0; bone_idx < skin->skinData->bones; bone_idx++) {
                             auto bone = skin->bones[bone_idx];
@@ -118,7 +118,7 @@ namespace plugin {
                             }
                         }
                     }
-                }
+                }*/
             }
             if (auto found_node = WalkNode(c.get()->AsNode(), nodeName)) {
                 return found_node;
