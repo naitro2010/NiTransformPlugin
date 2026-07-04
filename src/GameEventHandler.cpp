@@ -148,7 +148,9 @@ namespace plugin {
                     if (auto controller = WalkControllers(biped->objects[idx].partClone->parent->AsNode(), nodeName)) {
                         retval |= callback((RE::NiTimeController*) controller);
                     }
-
+                    if (retval) {
+                        return retval;
+                    }
                     auto obj = WalkNode(biped->objects[idx].partClone->parent->AsNode(), nodeName);
 
                     if (!obj) {
@@ -173,7 +175,9 @@ namespace plugin {
                     if (auto controller = WalkControllers(biped->bufferedObjects[idx].partClone->parent->AsNode(), nodeName)) {
                         retval |= callback((RE::NiTimeController*) controller);
                     }
-                
+                    if (retval) {
+                        return retval;
+                    }
                     auto obj = WalkNode(biped->bufferedObjects[idx].partClone->parent->AsNode(), nodeName);
                 
                     if (!obj) {
