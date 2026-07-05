@@ -43,16 +43,16 @@ namespace plugin {
         }
         if (auto obj = n->GetObjectByName(nodeName)) {
             if (auto found_node = obj) {
-                if (auto controller=found_node->GetController<RE::NiTimeController>()) {
-                    return controller;
+                if (auto controller=found_node->controllers) {
+                    return controller.get();
                 }
             }
         }
         if (std::string(n->name.c_str()).ends_with(nodeName)) {
         
             if (auto found_node = n) {
-                if (auto controller = found_node->GetController<RE::NiTimeController>()) {
-                    return controller;
+                if (auto controller = found_node->controllers) {
+                    return controller.get();
                 }
             }
 
@@ -65,11 +65,11 @@ namespace plugin {
             
                 if (std::string(geo->name.c_str()).ends_with(nodeName)) {
                     if (geo->GetGeometryRuntimeData().properties[RE::BSGeometry::States::kProperty]) {
-                        if (auto controller=geo->GetGeometryRuntimeData()
-                                .properties[RE::BSGeometry::States::kProperty]
-                                ->GetController<RE::NiTimeController>()) {
+                        auto property=geo->GetGeometryRuntimeData()
+                                .properties[RE::BSGeometry::States::kProperty];
+                        if (auto controller=property->controllers) {
                         
-                            return controller;
+                            return controller.get();
                         
                         }
                     }
