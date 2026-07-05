@@ -367,12 +367,12 @@ namespace plugin {
             DetourTransactionCommit();
         }
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformFrequency", "NiTransformPlugin", SetNiTransformFrequency,
-                                                             false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStart", "NiTransformPlugin", SetNiTransformStart, false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStop", "NiTransformPlugin", SetNiTransformStop, false);
+                                                             true);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStart", "NiTransformPlugin", SetNiTransformStart, true);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStop", "NiTransformPlugin", SetNiTransformStop, true);
         RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStopDelayed", "NiTransformPlugin", SetNiTransformStopDelayed,
-                                                             false);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformPause", "NiTransformPlugin", SetNiTransformPause, false);
+                                                             true);
+        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformPause", "NiTransformPlugin", SetNiTransformPause, true);
         
         logger::info("onDataLoaded()");
     }
