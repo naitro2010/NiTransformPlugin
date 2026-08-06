@@ -45,6 +45,9 @@ namespace plugin {
             if (auto found_node = obj) {
                 if (auto controller=found_node->controllers) {
                     controller_vec.push_back(controller.get());
+                    while (controller = RE::NiTimeControllerPtr(controller->GetNext())) {
+                        controller_vec.push_back(controller.get());
+                    }
                 }
             }
         }
@@ -53,6 +56,9 @@ namespace plugin {
             if (auto found_node = n) {
                 if (auto controller = found_node->controllers) {
                     controller_vec.push_back(controller.get());
+                    while (controller = RE::NiTimeControllerPtr(controller->GetNext())) {
+                        controller_vec.push_back(controller.get());
+                    }
                 }
             }
 
@@ -69,7 +75,9 @@ namespace plugin {
                                 ->controllers) {
                         
                             controller_vec.push_back(controller.get());
-                        
+                            while (controller = RE::NiTimeControllerPtr(controller->GetNext())) {
+                                controller_vec.push_back(controller.get());
+                            }
                         }
                     } 
                 }        
@@ -77,6 +85,9 @@ namespace plugin {
                     if (auto property = geo->GetGeometryRuntimeData().properties[RE::BSGeometry::States::kProperty]) {
                         if (auto controller = property->controllers) {
                             controller_vec.push_back(controller.get());
+                            while (controller = RE::NiTimeControllerPtr(controller->GetNext())) {
+                                controller_vec.push_back(controller.get());
+                            }
                         }
                     }
                 }
