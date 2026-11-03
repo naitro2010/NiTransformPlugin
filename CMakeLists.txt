@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 
 project(
         NiTransformPlugin
-        VERSION 0.0.2
+        VERSION 0.2.0
         LANGUAGES CXX)
 set(PROJECT_LICENSE "MIT")
 set(PROJECT_FRIENDLY_NAME ${PROJECT_NAME})
