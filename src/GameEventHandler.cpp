@@ -362,14 +362,7 @@ namespace plugin {
     }
 
     void GameEventHandler::onPostPostLoad() {
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformFrequency", "NiTransformPlugin", SetNiTransformFrequency,
-                                                             true);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStart", "NiTransformPlugin", SetNiTransformStart, true);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStop", "NiTransformPlugin", SetNiTransformStop, true);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformStopDelayed", "NiTransformPlugin", SetNiTransformStopDelayed,
-                                                             true);
-        RE::SkyrimVM::GetSingleton()->impl->RegisterFunction("SetNiTransformPause", "NiTransformPlugin", SetNiTransformPause, true);
-        
+
         logger::info("onPostPostLoad()");
     }
 
@@ -385,7 +378,14 @@ namespace plugin {
             DetourAttach(&(PVOID&) original_process_task, &ProcessNiTransformTasks);
             DetourTransactionCommit();
         }
-
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetNiTransformFrequency", "NiTransformPlugin", SetNiTransformFrequency,
+                                                             true);
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetNiTransformStart", "NiTransformPlugin", SetNiTransformStart, true);
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetNiTransformStop", "NiTransformPlugin", SetNiTransformStop, true);
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetNiTransformStopDelayed", "NiTransformPlugin", SetNiTransformStopDelayed,
+                                                             true);
+        RE::SkyrimVM::GetSingleton()->GetImpl()->RegisterFunction("SetNiTransformPause", "NiTransformPlugin", SetNiTransformPause, true);
+        
         logger::info("onDataLoaded()");
     }
 
