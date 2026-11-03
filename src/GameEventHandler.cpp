@@ -70,7 +70,7 @@ namespace plugin {
             if (auto geo = c.get()->AsGeometry()) {
             
                 if (std::string(geo->name.c_str()).ends_with(nodeName)) {
-                    if (auto property=geo->GetGeometryRuntimeData().properties[RE::BSGeometry::States::kEffect]) {
+                    if (auto property=geo->GetGeometryRuntimeData().shaderProperty) {
                         if (auto controller=property
                                 ->controllers) {
                         
@@ -82,7 +82,7 @@ namespace plugin {
                     } 
                 }        
             if (std::string(geo->name.c_str()).ends_with(nodeName)) {
-                    if (auto property = geo->GetGeometryRuntimeData().properties[RE::BSGeometry::States::kProperty]) {
+                    if (auto property = geo->GetGeometryRuntimeData().alphaProperty) {
                         if (auto controller = property->controllers) {
                             controller_vec.push_back(controller.get());
                             while (controller = RE::NiTimeControllerPtr(controller->GetNext())) {
